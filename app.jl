@@ -127,7 +127,7 @@ function ode_all_inputs()
     dcc_dropdown(id="examples", options=odeoptions, value=default_example))]
 end
 
-title = "Solving Differential Equations Interactively rer"
+title = "Solving Differential Equations Interactively"
 
 description = raw"
 This [Dash Julia](https://dash-julia.plotly.com/) application shows how to interactively solve 
