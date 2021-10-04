@@ -1,10 +1,7 @@
 using Pkg
-Pkg.activate("..")
-
+Pkg.activate(".")
 using PlotlyJS
-using DifferentialEquations
 using Dash, DashHtmlComponents, DashCoreComponents
-
 
 # Data for solving (dx/dt,dy/dt) = F(x,y), where F=field!
 # (x0, y0) is the initial state and
@@ -20,7 +17,7 @@ mutable struct ODEData
     # Time interval
     tmin::Float64
     tmax::Float64
-end
+end 
 
 # Evaluates function in (x,y) from formula
 function fxy(x, y, formula::String)
@@ -42,39 +39,61 @@ function parseODEData(dxdt, dydt, x0, y0, t0, t1)
     ODEData(field!, dxdt,dydt,x0, y0, t0, t1)
 end
 
-# Solved the differential equation from the ODE data
-function solveODE(data::ODEData)
-    u0 = [data.x0,data.y0]
-    tspan = (data.tmin, data.tmax)
-    prob = ODEProblem(data.field!, u0, tspan)
-    solver = RK4()
-    solve(prob, solver, reltol=1e-6)
-end
 
+# Solves ODE explicitely using RK4
+function solveODE(data::ODEData)
+    f = data.field!
+    n = 250 # steps count
+    zero = [0.0;0.0]
+    h = (data.tmax - data.tmin)/n # time step
+    k1 = [0.0;0.0]
+    k2 = [0.0;0.0]
+    k3 = [0.0;0.0]
+    k4 = [0.0;0.0]
+    # Setting Initial conditions
+    ps = [[0.0;0.0] for i = 1:(n+1)]
+    ps[1] = [data.x0;data.y0]
+    for i = 2:(n+1)
+        p = ps[i-1] 
+        f(k1,p,zero,0.0)
+        f(k2,p + (h/2.0)*k1,zero,0.0)
+        f(k3,p + (h/2.0)*k2,zero,0.0)
+        f(k4,p + h*k3,zero,0.0)
+        ps[i] = p + (h/6.0)*(k1 + 2*k2 +2*k3 + k4)
+    end
+    ps
+end
 
 # Gets the Plotly Scatter plot from the solution to the ODE
 function trace(sol)
-    x = [u[1] for u in sol.u]
-    y = [u[2] for u in sol.u]
+    x = [u[1] for u in sol]
+    y = [u[2] for u in sol]
     scatter(;x=x, y=y, mode="lines", name="Solution")
-end
+end 
 
 examples = Dict(
-    "Spring"=>parseODEData("y","-x",3.0,0.0,0.0,2*pi),
+    "Spring"=>parseODEData("y","-x",3.0,0.0,0.0,2*3.1417),
     "DampedSpring" => parseODEData("y", "-x-y/3", 0.0, 4.0, 0.0, 30.0),
-    "Pendulum"=>parseODEData("y", "-sin(x)", 3.0, 0.0, 0.0, 16)
+    "Pendulum"=>parseODEData("y", "-sin(x)", 3.0, 0.0, 0.0, 16),
+    "Predator-Prey"=>parseODEData("x-x*y","x*y-y",2.0,3.0,0.0,8.0)
     )
-
-defalt_example="Spring"
-
+  
+default_example="Spring"
 layout = Layout(;
+    title = "", 
+    xaxis_title="x",
+    yaxis_title="y",
     xaxis_range=[-5, 5],
-    yaxis_range=[-5, 5], width=600,height=550)
+    yaxis_range=[-5, 5], width=550,height=500)
 #
 # Creation of Dash App starts here
 #
-app = dash(external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"])
+#app = dash(external_stylesheets=["https://codepen.io/chriddyp/pen/bWLwgP.css"])
 
+mathjax = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"
+app = dash(external_scripts=[mathjax])
+#app = dash()
+app.title = "DashODE"
 # Utility fuction to retrieve inputs
 function odeinput(label; value="")
     html_div(
@@ -86,19 +105,14 @@ function html_break(n)
     html_div([html_br() for i = 1:n])
 end
 
-odeoptions = [
-            (label = "Linear well", value = "LWE"),
-            (label = "Pendulum", value = "PND")]
-
 odeoptions = [(label = k, value = k) for k in keys(examples)]
 
 function ode_graph(sol)
     dcc_graph(id="odedash", figure=plot([trace(sol)], layout))
 end
 
-
 function ode_all_inputs()
-    e = examples[defalt_example]
+    e = examples[default_example]
     [html_break(3),
     odeinput("dxdt",value=e.dxdt),
     odeinput("dydt",value=e.dydt),
@@ -109,13 +123,13 @@ function ode_all_inputs()
     html_button("Solve", id="solve-button", n_clicks=0),
     html_break(1),
     html_h6("Load ODE"),
-    html_div(style=Dict("max-width" => "300px"),
-    dcc_dropdown(id="examples", options=odeoptions, value=defalt_example))]
+    html_div(style=Dict("max-width" => "200px"),
+    dcc_dropdown(id="examples", options=odeoptions, value=default_example))]
 end
 
-title = "Solving Differential Equations Interactively"
+title = "Solving Differential Equations Interactively rer"
 
-description = "
+description = raw"
 This [Dash Julia](https://dash-julia.plotly.com/) application shows how to interactively solve 
 [differential equations](https://en.wikipedia.org/wiki/File:Elmer-pump-heatequation.png) in two variables  `x` and `y` (with initial
 condition given by `x0` and `y0` and time lapse equal to `time`). 
@@ -129,22 +143,28 @@ We will consider a few examples that arise when studying physical systems with o
 
 You can load the above examples from the drop down menu below (don't forget to press the solve button after loading). You can 
 modify these equations manually using the textual inputs, or you can create your own from scratch. 
-
-***Excercise***: Try modelling the
-[predator-prey](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) equations.
 "
 
 # Setting the app's layout: ODE graph to the left and controls to the right. 
-app.layout = html_div([html_center([html_h1("ODE Dash 2D"),
+
+mathjax = html_script(type="text/javascript", async=true, id="MathJax-script", src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js")
+
+html_header
+ 
+
+app.layout = html_div(
+    [html_center([html_h1("DashODE"),
     html_h2(title)]),
     dcc_markdown(description),
     html_div([
-        html_div([ode_graph(solveODE(examples[defalt_example])),
+        html_div([ode_graph(solveODE(examples[default_example])),
         ], className="six columns"),
         html_div(ode_all_inputs(), className="six columns"),
     ], className="row")
 ])
 
+
+# Update ODE data from dropdown
 callback!(app,Output("dxdt","value"), Output("dydt","value"),
               Output("x0","value"), Output("y0","value"), Output("time", "value"),
               Input("examples", "value")) do value
@@ -152,7 +172,7 @@ callback!(app,Output("dxdt","value"), Output("dydt","value"),
     return (e.dxdt, e.dydt, string(e.x0), string(e.y0), string(e.tmax))
 end
 
-
+# Update figure fro ODE data
 callback!(
     app,
     Output("odedash", "figure"),
@@ -162,7 +182,7 @@ callback!(
     State("dxdt", "value"),
     State("dydt", "value"),
     State("time", "value"),
-) do clicks, x0, y0, dxdt,dydt,time
+) do clicks, x0, y0, dxdt, dydt, time
     x0f = parse(Float64,x0)  
     y0f = parse(Float64,y0)
     odedata = parseODEData(dxdt, dydt, x0f, y0f , 0.0, parse(Float64,time))
@@ -170,5 +190,4 @@ callback!(
     p0G = scatter(;x=[x0f], y=[y0f], mode="markers",name="(x0,y0)")
     return plot([trace(sol),p0G], layout)
 end
-
 run_server(app, "0.0.0.0", debug=true)
