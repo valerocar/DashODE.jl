@@ -95,9 +95,9 @@ app = dash(external_scripts=[mathjax])
 #app = dash()
 app.title = "DashODE"
 # Utility fuction to retrieve inputs
-function odeinput(label; value="")
+function odeinput(id, label; value="")
     html_div(
-    [dcc_input(id=label, type="text", value=value),html_span("  "*label)])
+    [dcc_input(id=id, type="text", value=value),html_span("  "*label)])
 end
 
 # Utility function to do n html breaks
@@ -114,11 +114,11 @@ end
 function ode_all_inputs()
     e = examples[default_example]
     [html_break(3),
-    odeinput("dxdt",value=e.dxdt),
-    odeinput("dydt",value=e.dydt),
-    odeinput("x0",value=string(e.x0)),
-    odeinput("y0",value=string(e.y0)),
-    odeinput("time",value=string(e.tmax)),
+    odeinput("dxdt",raw"\(dx/dt\)",value=e.dxdt),
+    odeinput("dydt",raw"\(dy/dt\)",value=e.dydt),
+    odeinput("x0",raw"\(x_0\)",value=string(e.x0)),
+    odeinput("y0",raw"\(y_0\)",value=string(e.y0)),
+    odeinput("time",raw"\(t0\)",value=string(e.tmax)),
     html_break(1),
     html_button("Solve", id="solve-button", n_clicks=0),
     html_break(1),
@@ -131,31 +131,38 @@ title = "Solving Differential Equations Interactively"
 
 description = raw"
 This [Dash Julia](https://dash-julia.plotly.com/) application shows how to interactively solve 
-[differential equations](https://en.wikipedia.org/wiki/File:Elmer-pump-heatequation.png) in two variables  `x` and `y` (with initial
-condition given by `x0` and `y0` and time lapse equal to `time`). 
+[differential equations](https://en.wikipedia.org/wiki/Ordinary_differential_equation) in two variables  $x=x(t)$ and $y=y(t)$ during a time interval $T$, and with initial conditions
+$$x(0)=x_0, y(0)=y_0.$$ 
+In particular, we will consider the following examples: 
+
+  1. ***Mass on a spring***. In this case $x$ stands for the displacement of the mass $m$ from its equilibrium position, and $y$ is the velocity of the mass. 
+  The equation modelling this oscillating system is
+  $$ \frac{dx}{dt} = y, m \frac{dy}{dt} = -k x,$$
+  where $k$ stands for the stiffness of the spring. 
+  2. ***Mass on a spring with damping***. If we add to the above example a damping force that depends linearly on velocity, we obtain the equation
+  $$ \frac{dx}{dt} = y, m \frac{dy}{dt} = -k x - \alpha y.$$
+  3. The [pendulum equation](https://en.wikipedia.org/wiki/Pendulum_(mechanics)) describes the motion of a mass suspended from a fixed support and under the influence of gravity. In this case 
+  $x$ is the angle with respect to vertical and $y$ is the angular velocity. The nonlinear differential equation associated to this system is
+  $$ \frac{dx}{dt} = y, \frac{dy}{dt} = -(g/l)\sin(x),$$
+  where $g$ is the acceleration of gravity and $l$ is the distance from the point of attachment to the location of the mass. 
+  4. The [predator-prey equations](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) models the interaction of two species, whose populations are measued by $x$ and $y$, in which one is a predator and the other is a prey. They take the form
+  $$ \frac{dx}{dt} = \alpha x - \beta x y, \frac{dy}{dt} = \delta x y - \gamma y$$
 
 
-We will consider a few examples that arise when studying physical systems with one degree of freedom:
-
-  - ***Spring*** (`x`=positon, `y`=velocity). This equation models a particle oscillating under the influence of a linear force (Hooke's law). 
-  - ***Damped Spring***. We add to the above example a damping force (that depends linearly on velocity).
-  - ***Pendulum*** (`x`=angle, `y`=angular velocity). This is a nonlinear equation modeling the oscillation of a pendulum.
-
-You can load the above examples from the drop down menu below (don't forget to press the solve button after loading). You can 
-modify these equations manually using the textual inputs, or you can create your own from scratch. 
 "
-
+app_instructions = raw"You can load the above examples from the drop down menu below (don't forget to press the solve button after loading). You can 
+modify these equations manually using the textual inputs, or you can create your own from scratch."
 # Setting the app's layout: ODE graph to the left and controls to the right. 
 
 mathjax = html_script(type="text/javascript", async=true, id="MathJax-script", src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js")
 
-html_header
- 
 
 app.layout = html_div(
     [html_center([html_h1("DashODE"),
     html_h2(title)]),
-    dcc_markdown(description),
+    html_div(style=Dict("max-width" => "1000px"),dcc_markdown(description)),
+    html_h2("Interactive application"),
+    html_div(style=Dict("max-width" => "1000px"),dcc_markdown(app_instructions)),
     html_div([
         html_div([ode_graph(solveODE(examples[default_example])),
         ], className="six columns"),
