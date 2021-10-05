@@ -151,7 +151,7 @@ In particular, we will consider the following examples:
 
 
 "
-app_instructions = raw"To explore the above equations interactively use the drop down below to select one of them, and then press the solve button. You can 
+app_instructions = raw"To explore the above equations interactively use the drop down menu below to select one of them, and then press the solve button. You can 
 modify these equations manually; try changing their parameters to visualize the effect on their solution. You can also create your own differential equations from scratch by entering the necessary data in the corresponding input fields"
 # Setting the app's layout: ODE graph to the left and controls to the right. 
 
