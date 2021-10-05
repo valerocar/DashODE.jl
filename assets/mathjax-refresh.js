@@ -1,1 +1,2 @@
-//setInterval("MathJax.Hub.Queue(['Typeset',MathJax.Hub])",1000);
+setInterval("MathJax.Hub.Queue(['Typeset',MathJax.Hub])",1000);
+
