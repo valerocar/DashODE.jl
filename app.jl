@@ -118,7 +118,7 @@ function ode_all_inputs()
     odeinput("dydt",raw"\(dy/dt\)",value=e.dydt),
     odeinput("x0",raw"\(x_0\)",value=string(e.x0)),
     odeinput("y0",raw"\(y_0\)",value=string(e.y0)),
-    odeinput("time",raw"\(t0\)",value=string(e.tmax)),
+    odeinput("time",raw"\(t_0\)",value=string(e.tmax)),
     html_break(1),
     html_button("Solve", id="solve-button", n_clicks=0),
     html_break(1),
@@ -168,7 +168,7 @@ app.layout = html_div(
         html_div([ode_graph(solveODE(examples[default_example])),
         ], className="six columns"),
         html_div(ode_all_inputs(), className="six columns"),
-    ], className="row")
+    ], className="row"), html_break(length(examples)) # Making space for dropdown
 ])
 
 
