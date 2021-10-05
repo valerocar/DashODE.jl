@@ -130,28 +130,29 @@ end
 title = "Solving Differential Equations Interactively"
 
 description = raw"
-This [Dash Julia](https://dash-julia.plotly.com/) application shows how to interactively solve 
+This [Dash Julia](https://dash-julia.plotly.com/) application is designed to interactively solve 
 [differential equations](https://en.wikipedia.org/wiki/Ordinary_differential_equation) in two variables  $x=x(t)$ and $y=y(t)$ during a time interval $T$, and with initial conditions
 $$x(0)=x_0, y(0)=y_0.$$ 
 In particular, we will consider the following examples: 
 
-  1. ***Mass on a spring***. In this case $x$ stands for the displacement of the mass $m$ from its equilibrium position, and $y$ is the velocity of the mass. 
-  The equation modelling this oscillating system is
+  1. ***Mass on a spring***. In this case $x$ stands for the displacement of the mass $m$ from its equilibrium position, and for $y$ the velocity. 
+  The equations modelling this oscillating system are
   $$ \frac{dx}{dt} = y, m \frac{dy}{dt} = -k x,$$
   where $k$ stands for the stiffness of the spring. 
-  2. ***Mass on a spring with damping***. If we add to the above example a damping force that depends linearly on velocity, we obtain the equation
+  2. ***Mass on a spring with damping***. If we add to the above equations a damping force that depends linearly on velocity, we obtain
   $$ \frac{dx}{dt} = y, m \frac{dy}{dt} = -k x - \alpha y.$$
   3. The [pendulum equation](https://en.wikipedia.org/wiki/Pendulum_(mechanics)) describes the motion of a mass suspended from a fixed support and under the influence of gravity. In this case 
-  $x$ is the angle with respect to vertical and $y$ is the angular velocity. The nonlinear differential equation associated to this system is
+  $x$ is the angle with respect to vertical direction and $y$ is the angular velocity. The nonlinear differential equation associated to this system is
   $$ \frac{dx}{dt} = y, \frac{dy}{dt} = -(g/l)\sin(x),$$
   where $g$ is the acceleration of gravity and $l$ is the distance from the point of attachment to the location of the mass. 
-  4. The [predator-prey equations](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) models the interaction of two species, whose populations are measued by $x$ and $y$, in which one is a predator and the other is a prey. They take the form
+  4. The [predator-prey equations](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) model the interaction of two species (whose populations are measued by $x$ and $y$) in which one is a predator and the other is a prey. 
+  The corresponding equations are
   $$ \frac{dx}{dt} = \alpha x - \beta x y, \frac{dy}{dt} = \delta x y - \gamma y$$
 
 
 "
-app_instructions = raw"You can load the above examples from the drop down menu below (don't forget to press the solve button after loading). You can 
-modify these equations manually using the textual inputs, or you can create your own from scratch."
+app_instructions = raw"To explore the above equations interactively use the drop down below to select one of them, and then press the solve button. You can 
+modify these equations manually; try changing their parameters to visualize the effect on their solution. You can also create your own differential equations from scratch by entering the necessary data in the corresponding input fields"
 # Setting the app's layout: ODE graph to the left and controls to the right. 
 
 mathjax = html_script(type="text/javascript", async=true, id="MathJax-script", src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js")
@@ -195,6 +196,8 @@ callback!(
     odedata = parseODEData(dxdt, dydt, x0f, y0f , 0.0, parse(Float64,time))
     sol = solveODE(odedata)
     p0G = scatter(;x=[x0f], y=[y0f], mode="markers",name="(x0,y0)")
-    return plot([trace(sol),p0G], layout)
+    eq = raw"$\frac{dx}{dt} ="*dxdt*raw", "*raw"\frac{dy}{dt} ="*dydt*raw"$"
+    eqG = scatter(;x=0, y = [-4.4], mode="text", text=eq, name="Equation", textfont_size=15)
+    return plot([trace(sol),p0G,eqG], layout)
 end
 run_server(app, "0.0.0.0", debug=true)
